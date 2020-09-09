@@ -1,4 +1,3 @@
-
 class Logger:
     def create(self, name):
         return open(name, "a")
