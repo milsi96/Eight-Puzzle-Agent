@@ -10,7 +10,7 @@ from datetime import datetime
 
 EPISODES = 10_000
 ALFA = 0.4
-GAMMA = 0.5
+GAMMA = 0.8
 EPSILON = 0.7
 
 FOLDER_NAME = "TrainingEightPuzzle"
