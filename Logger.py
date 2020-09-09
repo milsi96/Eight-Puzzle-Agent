@@ -11,6 +11,3 @@ class Logger:
 
     def close(self, file):
         file.close()
-
-
-
