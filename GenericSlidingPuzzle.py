@@ -3,7 +3,7 @@ import random
 from collections import defaultdict
 import math
 
-FILE_NAME = "./Backup/q_values3.txt"
+FILE_NAME = "states_list.txt"
 
 UP = 0
 RIGHT = 1
@@ -27,18 +27,6 @@ WRONG_MOVE = 2
 
 REWARDS = [5, -1, -10]
 
-def load_states(file_name=FILE_NAME):
-    file = open(file_name, 'r')
-    states = []
-
-    for line in file:
-        if line.startswith("TOTAL"):
-            break
-        else:
-            state = line.split(":")[0]
-            states.append(get_state(state))
-    
-    return states
 
 class Puzzle:
     def __init__(self, rows=ROWS, columns=COLUMNS, min_shuffle=MIN_SHUFFLE, max_shuffle=MAX_SHUFFLE, preload_states=False):
@@ -65,7 +53,9 @@ class Puzzle:
     #
     def reset(self):
         if self.rows == ROWS and self.columns == COLUMNS and self.preload_states:
-            self.state = copy_matrix(random.choice(self.states), self.state)
+            random_index = random.randint(0, len(self.states)-1)
+            self.state = copy_matrix(self.states[random_index], self.state)
+            self.states.__delitem__(random_index)
         else:
             temp = copy_matrix(self.target, np.zeros((self.rows, self.columns)))
 
@@ -169,27 +159,20 @@ def compare_matrix(a, b):
                 return -1
     return 0
 
-def load_q_values(file_name=FILE_NAME):
-    logger = Logger()
-    file = logger.open(file_name)
-    q_values = defaultdict(lambda: np.zeros(4))
+def load_states(file_name=FILE_NAME):
+    file = open(file_name, 'r')
+    states = []
 
     for line in file:
         if line.startswith("TOTAL"):
             break
         else:
-            state = line.split(":")[0]
-            temp = line.split(":")[1].split(" ")[1:5]
+            state = line.strip()
+            states.append(get_state_from_key(state))
+    
+    return states
 
-            action_values = []
-            for i in range(4):
-                action_values.append(float(temp[i]))
-            
-            q_values[state] = np.array(action_values)
-
-    return q_values
-
-def get_state(state_key):
+def get_state_from_key(state_key):
     rows = int(math.sqrt(len(state_key)))
     columns = rows
     state = np.zeros((rows, columns))
@@ -201,3 +184,5 @@ def get_state(state_key):
             index += 1
     
     return state
+
+

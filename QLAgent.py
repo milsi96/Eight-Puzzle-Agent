@@ -7,18 +7,17 @@ from Logger import Logger
 from collections import defaultdict
 from GenericSlidingPuzzle import copy_matrix
 from datetime import datetime
-import math
 
-EPISODES = 50_000
+EPISODES = 10_000
 ALFA = 0.4
-GAMMA = 0.9
+GAMMA = 0.5
 EPSILON = 0.7
 
 FOLDER_NAME = "TrainingEightPuzzle"
 EPISODE_FILE_NAME = "./" + FOLDER_NAME + "/episode_{}.txt"
 Q_VALUES_FILE = "./" + FOLDER_NAME + "/q_values.txt"
 STATS_FILE = "./" + FOLDER_NAME + "/stats.txt"
-VISIT_FILE = "./" + FOLDER_NAME + "/visits.txt"
+VISITS_FILE = "./" + FOLDER_NAME + "/visits.txt"
 
 # 
 # key(state) returns a string sequence of the numbers that compose the state
@@ -30,6 +29,24 @@ def key(state):
         for j in range(len(state)):
             result += str(int(state[i][j]))
     return result
+
+def backup_table(q_values, q_values_file=Q_VALUES_FILE):
+    logger = Logger()
+    q_values_file = logger.create(q_values_file)
+    for state in q_values:
+        actions = ""
+        for action in q_values[state]:
+            actions = actions + str(action) + " "
+        logger.append(q_values_file, state + ":" + actions)
+    logger.append(q_values_file, "TOTAL ANALYZED STATES: " + str(len(q_values)))
+    logger.close(q_values_file)
+
+def backup_visits(visits, visits_file=VISITS_FILE):
+    logger = Logger()
+    visit_file = logger.create(visits_file)
+    for state in visits:
+        logger.append(visit_file, state + ":" + str(visits[state]))
+    logger.close(visit_file)
 
 
 class QLAgent:
@@ -64,13 +81,13 @@ def q_learning(gamma=GAMMA, alfa=ALFA, episodes=EPISODES):
 
         start = int(round(time.time() * 1000))
 
-        if episode & 250 == 0 and agent.epsilon > 0.1:
-            agent.epsilon -= 0.05
+        # if episode & 1000 == 0 and agent.epsilon > 0.1:
+        #     agent.epsilon -= 0.1
 
         agent.puzzle.reset()
 
         print("Episode: {} started at {}".format(episode, datetime.now()))
-        file = logger.create(EPISODE_FILE_NAME.format(episode))
+        # file = logger.create(EPISODE_FILE_NAME.format(episode))
 
         done = False
         while not done:
@@ -81,13 +98,14 @@ def q_learning(gamma=GAMMA, alfa=ALFA, episodes=EPISODES):
             next_state, reward, done = agent.puzzle.step(action)
             if reward == -10:
                 wrong_moves += 1 
+
             
-            logger.append(file, "TIMESTEP -> " + str(timestep))
-            logger.append(file, "CURRENT STATE ->\n" + str(current_state))
-            logger.append(file, "ACTION -> " + str(action))
-            logger.append(file, "NEXT_STATE -> \n" + str(next_state))
-            logger.append(file, "REWARD -> " + str(reward))
-            logger.append(file, "\n")
+            # logger.append(file, "TIMESTEP -> " + str(timestep))
+            # logger.append(file, "CURRENT STATE ->\n" + str(current_state))
+            # logger.append(file, "ACTION -> " + str(action))
+            # logger.append(file, "NEXT_STATE -> \n" + str(next_state))
+            # logger.append(file, "REWARD -> " + str(reward))
+            # logger.append(file, "\n")
 
 
             timestep += 1
@@ -104,8 +122,8 @@ def q_learning(gamma=GAMMA, alfa=ALFA, episodes=EPISODES):
 
         end = int(round(time.time() * 1000))
 
-        logger.append(file, "FINAL STATE: \n" + str(agent.puzzle.state) + "\n")
-        logger.close(file)
+        # logger.append(file, "FINAL STATE: \n" + str(agent.puzzle.state) + "\n")
+        # logger.close(file)
 
         logger.append(stats, str(episode))
         logger.append(stats, str(timestep))
@@ -114,18 +132,8 @@ def q_learning(gamma=GAMMA, alfa=ALFA, episodes=EPISODES):
     
     logger.close(stats)
 
-    q_values_file = logger.create(Q_VALUES_FILE)
-    for state in agent.q_values:
-        actions = ""
-        for action in agent.q_values[state]:
-            actions = actions + str(action) + " "
-        logger.append(q_values_file, state + ":" + actions)
-    logger.append(q_values_file, "TOTAL ANALYZED STATES: " + str(len(agent.q_values)))
-    logger.close(q_values_file)
-
-    visit_file = logger.create(VISIT_FILE)
-    for state in agent.visits:
-        logger.append(visit_file, state + ":" + str(agent.visits[state]))
-    logger.close(visit_file)
+    backup_table(agent.q_values)
+    backup_visits(agent.visits)
 
 q_learning()
+
